@@ -1,18 +1,11 @@
-# Let Nixpacks auto-detect PHP version from composer.json
-# Only customize the build commands
+# Override the install phase to prevent post-install scripts from failing
+# (package:discover tries to bootstrap Laravel which fails without .env)
+
+[phases.install]
+cmds = ["composer install --ignore-platform-reqs --no-scripts", "npm ci"]
 
 [phases.build]
-cmds = [
-    "cp .env.example .env",
-    "mkdir -p database && touch database/database.sqlite",
-    "composer install --no-dev --optimize-autoloader",
-    "php artisan key:generate --force",
-    "npm ci",
-    "npm run build",
-    "php artisan config:cache",
-    "php artisan route:cache",
-    "php artisan view:cache"
-]
+cmds = ["npm run build"]
 
 [start]
-cmd = "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
+cmd = "php artisan package:discover --ansi && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
